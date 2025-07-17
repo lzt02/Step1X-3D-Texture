@@ -25,9 +25,6 @@
 </div>
 
 ## 🔥🔥🔥 Latest News!!
-* June 26, 2025: 👋 We release the data preprocessing for shape VAE and diffusion, including advanced watertight method using depth_test and winding_number proposed by [CraftsMan3D](https://github.com/wyysf-98/CraftsMan3D) in path "Step1X-3D/data/watertight_and_sampling.py"! 
-* June 9, 2025: 👋 We release the multi-views render code for texture generation model training in path "Step1X-3D/data/ig2mv/render"!
-* May 27, 2025: 👋 We release muti-view generation model with texture sync module!
 * May 13, 2025: 👋 Step1X-3D online demo is available on huggingface-enjoy yourself with generated 3D assets! [Huggingface web live](https://huggingface.co/spaces/stepfun-ai/Step1X-3D)
 * May 13, 2025: 👋 We release the 800K uids of high quality 3D assets (excluding self-collected assets) obtained with our rigorous data curation pipeline for both training 3D geometry and synthesis. [Huggingface dataset](https://huggingface.co/datasets/stepfun-ai/Step1X-3D-obj-data/tree/main)
 * May 13, 2025: 👋 We have also released the training code of both Step1X-3D geometry generation and texture synthesis. 
@@ -44,7 +41,6 @@
 - [x] Training code
 - [x] Uid of high quality 3D assets
 - [x] Online demo (gradio deployed on huggingface)
-- [x] Mesh preprocessing (including watertight using depth_test and winding_number, sampling)
 - [ ] More controllable models, like conditioned with multi-view, bounding-box and skeleton
 - [ ] ComfyUI
 
@@ -66,7 +62,7 @@ By simultaneously advancing data quality, algorithmic fidelity, and reproducibil
 | Step1X-3D-geometry-label  | 🤗 [Huggingface](https://huggingface.co/stepfun-ai/Step1X-3D/tree/main/Step1X-3D-Geometry-Label-1300m) | 1.3B | 2025-05-13|
 | Step1X-3D Texture       | 🤗 [Huggingface](https://huggingface.co/stepfun-ai/Step1X-3D/tree/main/Step1X-3D-Texture)    | 3.5B |2025-05-13|
 |Models in ModelScope |🤖 [ModelScope](https://www.modelscope.cn/models/stepfun-ai/Step1X-3D) | 6.1B | 2025-05-14|
-## 3. Open Filtered High Quaily Datasets 
+## 3. Open filtered high quaily datasets 
 | Data source                       | Download link                   | Size       | Update date |                                                                                    
 |-----------------------------|-------------------------------|------------|------|
 | Objaverse| 🤗[Huggingface](https://huggingface.co/datasets/stepfun-ai/Step1X-3D-obj-data/blob/main/objaverse_320k.json)    | 320K |2025-05-13|
@@ -101,8 +97,6 @@ We have checked the environment in cuda12.4 and you can install cuda12.4 by foll
 pip install torch==2.5.1 torchvision==0.20.1 torchaudio==2.5.1 --index-url https://download.pytorch.org/whl/cu124
 pip install -r requirements.txt
 pip install torch-cluster -f https://data.pyg.org/whl/torch-2.5.1+cu124.html
-pip install "git+https://github.com/facebookresearch/pytorch3d.git@stable"
-pip install kaolin==0.17.0 -f https://nvidia-kaolin.s3.us-east-2.amazonaws.com/torch-2.5.1_cu124.html
 
 cd step1x3d_texture/custom_rasterizer
 python setup.py install
@@ -112,7 +106,7 @@ cd ../../
 ```
 We reused custom_rasterizer and differentiable_renderer tools in [Hunyuan3D 2.0]((https://github.com/Tencent/Hunyuan3D-2)) for the texture baker, thanks to their open-source contribution.
 
-## 5. Inference Script
+## 5. Inference script
 
 |                                                  | GPU Memory Usage | Time for 50 steps |
 | ------------------------------------------------ | ---------------- | ----------------- |
@@ -175,7 +169,7 @@ python app.py
 ```
  or [huggingface web live](https://huggingface.co/spaces/stepfun-ai/Step1X-3D)
 
-## 6. Training Script
+## 6. Training script
 You can select a configuration file for training and modify the scripts to support multi-GPU training or more training setting.
 ### 6.1 Train variational autoencoder
 ```bash
@@ -205,7 +199,7 @@ CUDA_VISIBLE_DEVICES=0 python train_ig2mv.py --config configs/train-texture-ig2m
 
 ## 7. Acknowledgments
 We would like to thank the following projects: [FLUX](https://github.com/black-forest-labs/flux), [DINOv2](https://github.com/facebookresearch/dinov2), [MV-Adapter](https://github.com/huanngzh/MV-Adapter), [CLAY](https://arxiv.org/abs/2406.13897), [Michelango](https://github.com/NeuralCarver/Michelangelo), [CraftsMan3D](https://github.com/wyysf-98/CraftsMan3D), [TripoSG](https://github.com/VAST-AI-Research/TripoSG), [Dora](https://github.com/Seed3D/Dora), [Hunyuan3D 2.0](https://github.com/Tencent/Hunyuan3D-2), [FlashVDM](https://github.com/Tencent/FlashVDM)
-, [diffusers](https://github.com/huggingface/diffusers) and [HuggingFace](https://huggingface.co) for their open exploration and contributions. More specifically in texture generation, we adopt part codes from [MV-Adapter](https://github.com/huanngzh/MV-Adapter) for multi-view generation, part codes from [bpy-render](https://github.com/huanngzh/bpy-rendere) for multi-view rendering and part codes from [Hunyuan 3D 2.0](https://github.com/Tencent-Hunyuan/Hunyuan3D-2) for texture baker.
+, [diffusers](https://github.com/huggingface/diffusers) and [HuggingFace](https://huggingface.co) for their open exploration and contributions.
 
 ## 8. License
 Step1X-3D is licensed under the Apache License 2.0. You can find the license files in the respective github and  HuggingFace repositories.

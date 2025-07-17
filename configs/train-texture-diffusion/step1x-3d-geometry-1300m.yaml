@@ -3,61 +3,60 @@
 # -------------------------------------------------------------
 # 0 | shape_model      | MichelangeloAutoencoder | 191 M 
 # 1 | visual_condition | Dinov2CLIPEncoder       | 731 M 
-# 2 | label_condition  | LabelEncoder            | 8.2 K 
-# 3 | denoiser_model   | FluxDenoiser            | 1.3 B
+# 2 | denoiser_model   | FluxDenoiser            | 1.3 B
 # -------------------------------------------------------------
 # 1.3 B     Trainable params
 # 923 M     Non-trainable params
 # 2.2 B     Total params
 
 exp_root_dir: "outputs"
-name: "step1x-3d-geometry-label/dinov2reglarge518-clip-label-fluxflow-dit1300m"
+name: "step1x-3d-geometry/dinov2reglarge518-fluxflow-dit1300m"
 tag: "${rmspace:${system.shape_model_type}+n${data.n_samples}+${system.optimizer.name}lr${system.optimizer.args.lr},_}"
 seed: 0
 
 data_type: "Objaverse-datamodule"
 data:
-  root_dir: "./data/shape_diffusion/objaverse"
-
+  root_dir: "./data/shape_diffusion/texture"
+  lowres_dir: "./data/shape_diffusion/texture" # path to the ground truth geometry
   load_geometry: True                # whether to load geometry
-  geo_data_type: "sdf" 
-  with_sharp_data: True
+  geo_data_type: "texture" #"sdf" 
+  with_sharp_data: False #True
   n_samples: 32768
   noise_sigma: 0.
-  random_flip: True # whether to randomly flip the input mesh
-  random_color_jitter: True # whether to add random color jitter to the input images
-  random_rotate: True # whether to add random rotation to the input images
+  random_flip: False #True # whether to randomly flip the input mesh
+  random_color_jitter: False #True # whether to add random color jitter to the input images
+  random_rotate: False #True # whether to add random rotation to the input images
 
-  load_image: True                # whether to load images 
+  load_image: False #True                # whether to load images 
   image_type: "rgb"               # rgb, normal
   idx: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19]        # front view
   n_views: 1
   background_color: [255, 255, 255]
 
   load_caption: False             # whether to load captions 
-  load_label: True                # whether to load labels
+  load_label: False                # whether to load labels
 
   batch_size: 1 # TODO: change this for your own dataset
   num_workers: 1 # change this for your own dataset
 
-system_type: "rectified-flow-system"
+system_type: "texture-rectified-flow-system"
 system:
   val_samples_json: "val_data/images/val_samples_rgb_image.json"
   guidance_scale: 7.5
   num_inference_steps: 30
   eta: 0.0
 
-  shape_model_type: michelangelo-autoencoder
+  shape_model_type: michelangelo-texture-autoencoder
   shape_model:
-    pretrained_model_name_or_path: checkpoints #stepfun-ai/Step1X-3D
-    subfolder: Step1X-3D-Geometry-Label-1300m
+    pretrained_model_name_or_path: stepfun-ai/Step1X-3D
+    subfolder: Step1X-3D-Geometry-1300m
     n_samples: ${data.n_samples}
     with_sharp_data: ${data.with_sharp_data}
     use_downsample: true
     num_latents: 2048
     embed_dim: 64
-    point_feats: 3
-    out_dim: 1
+    point_feats: 1024 #3
+    out_dim: 1027 #1
     num_freqs: 8
     include_pi: false
     heads: 12
@@ -70,36 +69,26 @@ system:
     use_flash: true
     use_checkpoint: false
 
-  visual_condition_type: "dinov2-clip-encoder"
+  # visual_condition_type: null #"dinov2-encoder"
   visual_condition:
     pretrained_dino_name_or_path: facebook/dinov2-with-registers-large
-    pretrained_clip_name_or_path: openai/clip-vit-large-patch14
     encode_camera: false
     n_views: ${data.n_views}
     empty_embeds_ratio: 0.1
     normalize_embeds: false
     zero_uncond_embeds: true
-    image_size: 224
-
-  label_condition_type: "label-encoder"
-  label_condition:
-    hidden_size: 1024
-    empty_embeds_ratio: 0.1
-    normalize_embeds: false
-    zero_uncond_embeds: true
+    image_size: 518
 
   denoiser_model_type: "flux-denoiser"
   denoiser_model:
     input_channels: ${system.shape_model.embed_dim}
-    width: 1536
-    layers: 8
-    num_single_layers: 16
-    num_heads: 16
+    width: 1280
+    layers: 12
+    num_single_layers: 24
+    num_heads: 20
     use_visual_condition: True
     visual_condition_dim: 1024
     n_views: ${data.n_views}
-    use_label_condition: True
-    label_condition_dim: ${system.label_condition.hidden_size}
 
   noise_scheduler_type: "diffusers.schedulers.FlowMatchEulerDiscreteScheduler"
   noise_scheduler:

@@ -146,7 +146,7 @@ class Siren(nn.Module):
         return out
 
 
-def get_embedder(embed_type="fourier", num_freqs=-1, input_dim=3, include_pi=True):
+def get_embedder(embed_type="fourier", num_freqs=-1, input_dim=1024, include_pi=True):
     if embed_type == "identity" or (embed_type == "fourier" and num_freqs == -1):
         return nn.Identity(), input_dim
 
@@ -473,7 +473,7 @@ class PerceiverCrossAttentionDecoder(ModelMixin, nn.Module):
         )
 
 
-@step1x3d_geometry.register("michelangelo-autoencoder")
+@step1x3d_geometry.register("michelangelo-texture-autoencoder")
 class MichelangeloAutoencoder(BaseModule):
     r"""
     A VAE model for encoding shapes into latents and decoding latent representations into shapes.

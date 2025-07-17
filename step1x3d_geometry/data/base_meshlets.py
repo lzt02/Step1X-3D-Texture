@@ -146,9 +146,8 @@ class BaseDataset(Dataset):
                 raise NotImplementedError(
                     f"sampling strategy {self.cfg.sampling_strategy} not implemented"
                 )
-        # self.cfg.scale = 0.01
+
         # rescale data
-        print(f"scale: {self.cfg.scale}")
         surface[:, :3] = surface[:, :3] * self.cfg.scale  # target scale
         if self.cfg.geo_data_type == "sdf":
             if self.cfg.with_sharp_data:
@@ -196,9 +195,7 @@ class BaseDataset(Dataset):
 
         if self.cfg.geo_data_type == "sdf":
             if self.cfg.supervision_type == "sdf":
-                print("ret['sdf'].shape:", sdfs[ind].shape)
                 ret["sdf"] = sdfs[ind].flatten().astype(np.float32)
-                print("ret['sdf'].flatten().shape:", ret["sdf"].shape)
             elif self.cfg.supervision_type == "occupancy":
                 ret["occupancies"] = np.where(sdfs[ind].flatten() < 1e-3, 0, 1).astype(
                     np.float32
@@ -335,19 +332,7 @@ class BaseDataset(Dataset):
                         ret[key] = torch.flip(ret[key], [2])
                     if key in ["mask"]:  # random flip the input image
                         ret[key] = torch.flip(ret[key], [2])
-        if "data" in self.cfg and self.cfg.data is not None:
-            if self.cfg.data.lowres_dir is not None:
-                print(f"Loading ground truth data from {self.cfg.data.lowres_dir}")
-                data_lowres = np.load(f"{self.cfg.root_dir}/meshlets_lowres/{self.uids[index]}.npy")
-                feature_lowres = data_lowres
-                surface_lowres = data_lowres
-                surface_lowres[:, :3] = surface_lowres[:, :3] * self.cfg.scale  # target scale
-                ret_lowres = {
-                    "uid": self.uids[index].split("/")[-1],
-                    "surface_lowres": surface_lowres.astype(np.float32),
-                    "feature_lowres":feature_lowres.astype(np.float32),
-                }
-                ret.update(ret_lowres)
+
         # load caption
         meta = None
         if self.cfg.load_caption:
@@ -367,12 +352,11 @@ class BaseDataset(Dataset):
         return ret
 
     def __getitem__(self, index):
-        return self._get_data(index)
-        # try:
-        #     return self._get_data(index)
-        # except Exception as e:
-        #     print(f"Error in {self.uids[index]}: {e}")
-        #     return self.__getitem__(np.random.randint(len(self)))
+        try:
+            return self._get_data(index)
+        except Exception as e:
+            print(f"Error in {self.uids[index]}: {e}")
+            return self.__getitem__(np.random.randint(len(self)))
 
     def collate(self, batch):
         from torch.utils.data._utils.collate import default_collate_fn_map

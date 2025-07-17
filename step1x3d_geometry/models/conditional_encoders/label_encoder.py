@@ -117,10 +117,13 @@ class LabelEncoder(BaseLabelEncoder, ModelMixin):
                         torch.zeros(self.cfg.hidden_size).detach().to(get_device())
                     )
                 else:
+                    sym_key = label["symmetry"][0] if isinstance(label["symmetry"], list) else label["symmetry"]
+                    label_embeds = SYMMETRY_TYPE_MAPPING[sym_key]
                     symmetry_type_label_embeds.append(
                         self.embedding_table_symmetry_type(
                             torch.tensor(
-                                SYMMETRY_TYPE_MAPPING[label["symmetry"]]
+                                label_embeds
+                                # SYMMETRY_TYPE_MAPPING[label["symmetry"]]
                             ).to(get_device())
                         )
                     )

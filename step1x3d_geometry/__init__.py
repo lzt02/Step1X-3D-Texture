@@ -18,11 +18,15 @@ def register(name):
 
 def find(name):
     if name in __modules__:
+        print(f"Module {name} found!")
+        print(__modules__[name])
         return __modules__[name]
     else:
+        print(f"Module {name} not found!")
         try:
             module_string = ".".join(name.split(".")[:-1])
             cls_name = name.split(".")[-1]
+            print(module_string, cls_name)
             module = importlib.import_module(module_string, package=None)
             return getattr(module, cls_name)
         except Exception as e:

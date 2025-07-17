@@ -41,7 +41,7 @@ def get_sigmas(noise_scheduler, timesteps, n_dim=4, dtype=torch.float32):
     return sigma
 
 
-@step1x3d_geometry.register("rectified-flow-system")
+@step1x3d_geometry.register("texture-rectified-flow-system")
 class RectifiedFlowSystem(BaseSystem):
     @dataclass
     class Config(BaseSystem.Config):
@@ -169,6 +169,7 @@ class RectifiedFlowSystem(BaseSystem):
                 self.denoiser_model.dit_model.add_adapter(self.transformer_lora_config)
 
     def forward(self, batch: Dict[str, Any], skip_noise=False) -> Dict[str, Any]:
+        print("Batch keys:", batch.keys())
         # 1. encode shape latents
         if "sharp_surface" in batch.keys():
             sharp_surface = batch["sharp_surface"][
@@ -181,7 +182,14 @@ class RectifiedFlowSystem(BaseSystem):
             sample_posterior=True,
             sharp_surface=sharp_surface,
         )
-
+        
+        # gain low-res condition
+        shape_embeds_cond, latents_cond, _ = self.shape_model.encode(
+            batch["surface_lowres"][..., : 3 + self.cfg.shape_model.point_feats],
+            sample_posterior=True,
+            sharp_surface=None,
+        )
+        
         # 2. gain visual condition
         visual_cond = None
         if self.cfg.visual_condition_type is not None:
@@ -256,7 +264,7 @@ class RectifiedFlowSystem(BaseSystem):
 
         # 6. diffusion model forward
         output = self.denoiser_model(
-            noisy_z, timesteps.long(), visual_cond, caption_cond, label_cond
+            noisy_z, timesteps.long(), latents_cond, visual_cond, caption_cond, label_cond
         ).sample
         print(f"output.shape: {output.shape}")
         # 7. compute loss

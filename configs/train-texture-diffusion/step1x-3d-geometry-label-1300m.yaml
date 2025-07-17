@@ -49,7 +49,7 @@ system:
 
   shape_model_type: michelangelo-autoencoder
   shape_model:
-    pretrained_model_name_or_path: checkpoints #stepfun-ai/Step1X-3D
+    pretrained_model_name_or_path: stepfun-ai/Step1X-3D
     subfolder: Step1X-3D-Geometry-Label-1300m
     n_samples: ${data.n_samples}
     with_sharp_data: ${data.with_sharp_data}

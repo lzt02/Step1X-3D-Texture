@@ -11,7 +11,7 @@ from step1x3d_geometry.utils.typing import *
 from step1x3d_geometry.utils.misc import get_rank
 
 
-@step1x3d_geometry.register("shape-autoencoder-system")
+@step1x3d_geometry.register("texture-autoencoder-system")
 class ShapeAutoEncoderSystem(BaseSystem):
     @dataclass
     class Config(BaseSystem.Config):
@@ -35,13 +35,18 @@ class ShapeAutoEncoderSystem(BaseSystem):
         )
 
     def forward(self, batch: Dict[str, Any]) -> Dict[str, Any]:
-        rand_points = batch["rand_points"]
+        # rand_points = batch["rand_points"]
+        print("Batch keys:", batch.keys())
+        rand_points = batch["feature"][:, :, -3:] #[1, 10, 1027] -> [1, 10, 3]
         if "sdf" in batch:
             target = batch["sdf"]
             criteria = torch.nn.MSELoss()
         elif "occupancies" in batch:
             target = batch["occupancies"]
             criteria = torch.nn.BCEWithLogitsLoss()
+        elif "feature" in batch:
+            target = batch["surface"]
+            criteria = torch.nn.MSELoss()
         else:
             raise NotImplementedError
 
@@ -57,14 +62,12 @@ class ShapeAutoEncoderSystem(BaseSystem):
             sample_posterior=self.cfg.sample_posterior,
         )
         latents = self.shape_model.decode(kl_embed)  # [B, num_latents, width]
-        print("11111111111111111111111111111111")
         print(f"rand_points.shape:{rand_points.shape}")
         print(f"latents.shape:{latents.shape}")
-        logits = self.shape_model.query(rand_points, latents).squeeze(
+        logits = self.shape_model.query(rand_points, latents).squeeze(  # pc, feats
             -1
         )  # [B, num_rand_points]
         print(f"logits.shape:{logits.shape}")
-        print(f"target.shape:{target.shape}")
         if self.cfg.sample_posterior:
             loss_kl = posterior.kl()
             loss_kl = torch.sum(loss_kl) / loss_kl.shape[0]
@@ -103,7 +106,19 @@ class ShapeAutoEncoderSystem(BaseSystem):
 
         for name, value in self.cfg.loss.items():
             self.log(f"train_params/{name}", self.C(value))
-
+        print(f"loss: {loss}")
+        # 每 N 个 epoch 保存一次 logits 和 target
+        if (self.current_epoch + 1) % 20000 == 0 and batch_idx == 0:
+            logits = out["logits"].squeeze(0)  # 从 [1, N, 1027] 转换为 [N, 1027]
+            target = out["target"].squeeze(0) 
+            # 保存为文本文件
+            import os
+            save_dir = f"saved_arrays_{logits.shape[0]}_{logits.shape[1]}"
+            os.makedirs(save_dir, exist_ok=True)
+            # 提取 logits 和 target，并调整形状
+            print(f"saving: {logits.shape}")
+            np.savetxt(os.path.join(save_dir, f"logits_epoch_{self.current_epoch + 1}.txt"), logits.detach().cpu().numpy())
+            np.savetxt(os.path.join(save_dir, f"target_epoch_{self.current_epoch + 1}.txt"), target.detach().cpu().numpy())
         return {"loss": loss}
 
     @torch.no_grad()
